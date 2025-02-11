@@ -1,0 +1,42 @@
+[package]
+name = "librs"
+version = "0.1.0"
+edition = "2021"
+
+
+
+# untested
+[package.metadata.docs.rs]
+rustdoc-args = [ "--html-in-header", "./src/docs-header.html" ]
+
+
+[profile.dev]
+panic ="abort"
+opt-level = 3
+
+
+[profile.release]
+panic ="abort"
+opt-level = 3
+
+#[profile.test]
+#panic ="abort"
+
+[lib]
+crate-type=["staticlib"]
+
+[dependencies]
+
+[target.'cfg(target_os="none")'.dependencies]
+cortex-m = { version="0.7.7", feature=["critical-section-single-core"] }
+panic-itm = "0.4.2"
+critical-section="*"
+stm32g4-staging = { version = "0.19.0", features = ["stm32g491"] }
+itm-debug = { path="/Users/danielbraun/devel/ruststm/test2/stm32_crates/itm_debug", version="0.1.0" }
+#panic-itm = { path="/Users/danielbraun/devel/ruststm/cortex-m/panic-itm", features=["onechar_itm"] }
+
+
+#[dependencies.stm32g4-staging]
+#path = "/Users/danielbraun/devel/ruststm/stm32-rs/stm32g4"
+#version = "0.19.0"
+#features = ["stm32g491"]
