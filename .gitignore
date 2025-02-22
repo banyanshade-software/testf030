@@ -1,0 +1,17 @@
+*.o
+*.su
+*.bin
+*.map
+*.list
+*.swp
+*.launch
+.settings
+SWV_export
+.metadata/
+.depend
+.gitignore.sav
+Debug/
+Release/
+tmp/
+.DS_Store
+tags

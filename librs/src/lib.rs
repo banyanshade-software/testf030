@@ -23,7 +23,7 @@
 #[cfg(test)]
 extern crate std;
 
-use itm_debug::{itm_debug1, itm::DBG_ERR};
+//use itm_debug::{itm_debug1, itm::DBG_ERR};
 
 //extern crate panic_itm;
 
@@ -33,15 +33,19 @@ extern crate critical_section;
 //use cortex_m::{peripheral};
 use core::ffi::c_int;
 #[cfg(not(test))]
-use stm32g4_staging::stm32g491;
+use stm32f0::stm32f0x0;
+//use stm32g4_staging::stm32g491;
 
 //extern "C" { pub fn HAL_Delay(mil :u32); }
 
+pub mod minos;
+
+
 extern "C" { 
-    /// extern definition of FreeRTOS/CMSIS osDelay()
-	pub fn osDelay(mil :u32) -> c_int;
-    /// wrapper (removing delay parameters) around xTaskNotifyWait
-	pub fn notifWait() -> u32;
+    // extern definition of FreeRTOS/CMSIS osDelay()
+	//pub fn osDelay(mil :u32) -> c_int;
+    // wrapper (removing delay parameters) around xTaskNotifyWait
+	//pub fn notifWait() -> u32;
 }
 
 /// sample text. 
@@ -64,19 +68,21 @@ un peu particulier  il me semblait que j etais moi meme ce dont parlait l ouvrag
 /// This is called directly from main.c, in the default task startup function
 #[cfg(not(test))]
 #[no_mangle]
+
+/*
 fn rs_main() -> !{
 	// let peripherals = stm32g491::Peripherals::take().unwrap(); << dependecies problem
-	let peripherals = unsafe { stm32g491::Peripherals::steal() };
+	let peripherals = unsafe { stm32f0x0::Peripherals::steal() };
     let gpioa = &peripherals.GPIOA;  // Nucleo green LED is on PA5
 	
-    itm_debug1!(DBG_ERR, "hello", 0);
+    //itm_debug1!(DBG_ERR, "hello", 0);
 	loop {
         // all the string to morse conversion is on the 3 following lines,
         // which obviously can easyly be tested on host, separately from the MCU stuffs
 
   		let mut mi = morse_iterator(SOMETEXT);
     	loop {
-			let _ = unsafe { notifWait() }; // notifWait() is simply a wrapper around xTaskNotifyWait()
+			notifWait(); // notifWait() is simply a wrapper around xTaskNotifyWait()
 			// TIM7 IRQ (configured as timebase src timer) sends notification every 100ms
 			
 			let k = mi.next(); // iterators are lazy so actual call to morse() and to_onoff()
@@ -86,12 +92,14 @@ fn rs_main() -> !{
 			match k {
 				None => break,
                 // GPIO PA5 is connected to LED on G491 Nucleo board
-				Some(' ') => gpioa.brr() .write(|w| w.br5().set_bit()),
-				_         => gpioa.bsrr().write(|w| w.bs5().set_bit()),
+				Some(' ') => gpioa.brr.write(|w| w.br5().set_bit()),
+                _         => gpioa.bsrr.write(|w| w.bs5().set_bit()),
 			};
 	    }
 	}
 }
+*/
+
 
 /// simple function to create the morse iterators
 ///

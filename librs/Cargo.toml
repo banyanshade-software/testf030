@@ -29,10 +29,11 @@ crate-type=["staticlib"]
 
 [target.'cfg(target_os="none")'.dependencies]
 cortex-m = { version="0.7.7", feature=["critical-section-single-core"] }
-panic-itm = "0.4.2"
+#panic-itm = "0.4.2"
 critical-section="*"
-stm32g4-staging = { version = "0.19.0", features = ["stm32g491"] }
-itm-debug = { path="/Users/danielbraun/devel/ruststm/test2/stm32_crates/itm_debug", version="0.1.0" }
+stm32f0 = { version = "0.15.0", features = ["stm32f0x0"] }
+#stm32g4-staging = { version = "0.19.0", features = ["stm32g491"] }
+#itm-debug = { path="/Users/danielbraun/devel/ruststm/test2/stm32_crates/itm_debug", version="0.1.0" }
 #panic-itm = { path="/Users/danielbraun/devel/ruststm/cortex-m/panic-itm", features=["onechar_itm"] }
 
 
