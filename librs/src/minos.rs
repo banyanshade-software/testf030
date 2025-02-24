@@ -70,6 +70,21 @@ pub struct TCB_ro {
     pub(crate) base_priority: u8,
 }
 
+pub struct Minos_Scheduler {
+	tasks_defs: &'static[TCB_ro],
+	tasks_vars: &'static mut[TCB_rw]
+}
+
+
+#[macro_export]
+macro_rules! Minos_Tasks {
+    ( $( < $name:ident, $prio:expr, $stacksize:tt > ),*) => {
+       static TOTO :u32 = 0;
+    };
+}
+
+Minos_Tasks!(<t1, 3, 1024>
+          ,  <t2, 4, 1024>);
 
 #[no_mangle]
 pub   extern "C" fn PendSV_Handler() {
@@ -89,7 +104,6 @@ macro_rules! syscall {
             }
         }
     };
- 
 }
 
 // Use the macro to define the function
