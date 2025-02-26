@@ -138,7 +138,7 @@ macro_rules! Minos_Tasks {
  			    let [<stu_ $name>] = unsafe { &[<STACK_ $name>][0] as *const usize as usize };
   			)*
  			static mut Vars : [TcbRw; $num] = [ $( TcbRw { state: TaskState::Ready, stack_top: 0, stack_addr:$stacksize} ),* ];
- 			let pvars  = unsafe { &mut vars};
+ 			let pvars  = unsafe { &mut Vars};
  			let mut i = 0;
  			$( 
 				pvars[i].stack_top  = [<stu_ $name>];
