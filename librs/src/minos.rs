@@ -61,12 +61,12 @@ enum TaskState {
 
 pub struct TcbRw {
 	pub(crate) state: TaskState,
-    pub(crate) stack_top:  PtrSize,
-    pub(crate) stack_addr: PtrSize,
+    pub(crate) stack_top:  usize,
+    pub(crate) stack_addr: usize,
 }
 
 pub struct TcbRo {
-    pub(crate) stack_size: PtrSize,
+    pub(crate) stack_size: usize,
     pub(crate) base_priority: u8,
 }
 
@@ -78,16 +78,16 @@ pub struct MinosScheduler {
 
 // https://github.com/garasubo/erkos/blob/f972248092816d7b2c084f09c6178908af9cd14c/kernel/src/macros.rs#L4
 
-/*
+
 macro_rules! stack_allocate {
     ($nwords:expr) => {{
         #[link_section = ".bss"]  // .uninit
-        static mut STACK: [PtrSize; $nwords] = [0; $nwords];
+        static mut STACK: [u32; $nwords] = [0; $nwords];
 
-        unsafe { &STACK[0] as *const PtrSize as PtrSize }
+        unsafe { &STACK[0] as *const usize as usize }
     }};
 }
-*/
+
 
 /*impl TcbRw {
 	pub const fn nc(stacksize: u32) -> Self {
@@ -102,23 +102,21 @@ macro_rules! stack_allocate {
 
 
 /// realy like usize but usable in const eval
-type PtrSize = u32;
-macro_rules! PtrSize {
-    () => { u32
-        
-    };
-}
-const USIZEBYTES : PtrSize = 4; //(usize::BITS/8) as PtrSize;
+//type PtrSize = u32;
+
+const USIZEBYTES : usize = 4; //(usize::BITS/8) as u32;
 
 //         unsafe { &STACK[0] as *const u8 as u32 + $n }
 
 macro_rules! new_TcbRw {
     ($nwords:expr) => {{
 		#[link_section = ".bss"]  // .uninit
-        static mut STACK: [PtrSize; $nwords] = [0; $nwords];
-        let st  = unsafe { &STACK[0] as *const PtrSize as PtrSize };
-        let sp  = st + USIZEBYTES*$nwords;
-        TcbRw { state: TaskState::Ready, stack_top: st, stack_addr: sp }
+        static mut STACK: [usize; $nwords] = [0; $nwords];
+        //let st  = unsafe { &STACK[0] as *const u32 as u32 };
+        let st  = unsafe { &STACK[0] as *const usize  };
+        let stu = st as usize;
+        let sp  = stu + USIZEBYTES*$nwords;
+        TcbRw { state: TaskState::Ready, stack_top: stu, stack_addr: sp }
 	}};
 }
 //macro_rules! count {
@@ -126,14 +124,28 @@ macro_rules! new_TcbRw {
 //    ( $x:tt $($xs:tt)* ) => (1usize + count!($($xs)*));
 //}
 
+
+
 #[macro_export]
 macro_rules! Minos_Tasks {
     ( $num:expr, $( < $name:ident, $prio:expr, $stacksize:tt > ),*) => {{
  		const DEFS : [TcbRo; $num] = [  $( TcbRo{stack_size:$stacksize, base_priority:$prio} ),* ];
-		static mut vars : [TcbRw; $num] = [ $( new_TcbRw!($stacksize) ),* ];
-		let pvars  = unsafe { &mut vars};
-		MinosScheduler { tasks_defs: &DEFS, tasks_vars: pvars }}
-    };
+ 		paste::paste!{
+ 			$( static mut [<STACK_ $name>]: [usize; $stacksize] = [0; $stacksize]; 
+ 			   let [<stacksize_ $name>] = $stacksize;
+ 			   let [<stu_ $name>] = unsafe { &[<STACK_ $name>][0] as *const usize as usize };
+  			)*
+ 			static mut vars : [TcbRw; $num] = [ $( TcbRw { state: TaskState::Ready, stack_top: 0, stack_addr:$stacksize} ),* ];
+ 			let pvars  = unsafe { &mut vars};
+ 			let mut i = 0;
+ 			$( 
+				pvars[i].stack_top  = [<stu_ $name>];
+				pvars[i].stack_addr = [<stu_ $name>] + [<stacksize_ $name>];
+				i = i+1;
+			)*
+		} // paste
+		MinosScheduler { tasks_defs: &DEFS, tasks_vars: pvars }
+    }};
 }
 
 pub fn testme () -> MinosScheduler {
