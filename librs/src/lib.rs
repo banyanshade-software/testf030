@@ -31,9 +31,9 @@ extern crate std;
 extern crate critical_section;
 
 //use cortex_m::{peripheral};
-use core::ffi::c_int;
-#[cfg(not(test))]
-use stm32f0::stm32f0x0;
+//use core::ffi::c_int;
+//#[cfg(not(test))]
+//use stm32f0::stm32f0x0;
 //use stm32g4_staging::stm32g491;
 
 //extern "C" { pub fn HAL_Delay(mil :u32); }
