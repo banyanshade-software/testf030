@@ -131,11 +131,13 @@ macro_rules! Minos_Tasks {
     ( $num:expr, $( < $name:ident, $prio:expr, $stacksize:tt > ),*) => {{
  		const DEFS : [TcbRo; $num] = [  $( TcbRo{stack_size:$stacksize, base_priority:$prio} ),* ];
  		paste::paste!{
- 			$( static mut [<STACK_ $name>]: [usize; $stacksize] = [0; $stacksize]; 
- 			   let [<stacksize_ $name>] = $stacksize;
- 			   let [<stu_ $name>] = unsafe { &[<STACK_ $name>][0] as *const usize as usize };
+ 			$( 
+				#[link_section = ".bss"]  // .uninit, cmm ..?
+				static mut [<STACK_ $name>]: [usize; $stacksize] = [0; $stacksize]; 
+ 			    let [<stacksize_ $name>] = $stacksize;
+ 			    let [<stu_ $name>] = unsafe { &[<STACK_ $name>][0] as *const usize as usize };
   			)*
- 			static mut vars : [TcbRw; $num] = [ $( TcbRw { state: TaskState::Ready, stack_top: 0, stack_addr:$stacksize} ),* ];
+ 			static mut Vars : [TcbRw; $num] = [ $( TcbRw { state: TaskState::Ready, stack_top: 0, stack_addr:$stacksize} ),* ];
  			let pvars  = unsafe { &mut vars};
  			let mut i = 0;
  			$( 
