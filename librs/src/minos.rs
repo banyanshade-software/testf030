@@ -18,6 +18,7 @@ use cortex_m::{peripheral};
 
 #[no_mangle]
 pub extern "C" fn rs_main() -> !{
+	_ = testme();
     loop {
     }
 }
@@ -34,7 +35,8 @@ pub unsafe extern "C"  fn SysTick_Handler() {
     }
 }
 
-pub unsafe extern "C"  fn minos_yield() {
+//pub unsafe extern "C"  fn minos_yield() {
+pub   fn minos_yield() {
 	
         cortex_m::peripheral::SCB::set_pendsv();
         /* it is unclear if a barrier is actually needed here
@@ -72,8 +74,11 @@ pub struct TcbRo {
 
 
 pub struct MinosScheduler {
+	num_tasks: u8,
 	tasks_defs: &'static[TcbRo],
 	tasks_vars: &'static mut[TcbRw]
+	
+	
 }
 
 // https://github.com/garasubo/erkos/blob/f972248092816d7b2c084f09c6178908af9cd14c/kernel/src/macros.rs#L4
@@ -129,16 +134,16 @@ macro_rules! new_TcbRw {
 #[macro_export]
 macro_rules! Minos_Tasks {
     ( $num:expr, $( < $name:ident, $prio:expr, $stacksize:tt > ),*) => {{
- 		const DEFS : [TcbRo; $num] = [  $( TcbRo{stack_size:$stacksize, base_priority:$prio} ),* ];
+ 		pub const DEFS : [TcbRo; $num] = [  $( TcbRo{stack_size:$stacksize, base_priority:$prio} ),* ];
  		paste::paste!{
  			$( 
 				#[link_section = ".bss"]  // .uninit, cmm ..?
-				static mut [<STACK_ $name>]: [usize; $stacksize] = [0; $stacksize]; 
+				pub static  mut [<STACK_ $name>]: [usize; $stacksize] = [0; $stacksize]; 
  			    let [<stacksize_ $name>] = $stacksize;
  			    let [<stu_ $name>] = unsafe { &[<STACK_ $name>][0] as *const usize as usize };
   			)*
- 			static mut Vars : [TcbRw; $num] = [ $( TcbRw { state: TaskState::Ready, stack_top: 0, stack_addr:$stacksize} ),* ];
- 			let pvars  = unsafe { &mut Vars};
+ 			static mut VARS : [TcbRw; $num] = [ $( TcbRw { state: TaskState::Ready, stack_top: 0, stack_addr:$stacksize} ),* ];
+ 			let pvars  = unsafe { &mut VARS};
  			let mut i = 0;
  			$( 
 				pvars[i].stack_top  = [<stu_ $name>];
@@ -146,13 +151,34 @@ macro_rules! Minos_Tasks {
 				i = i+1;
 			)*
 		} // paste
-		MinosScheduler { tasks_defs: &DEFS, tasks_vars: pvars }
+		MinosScheduler { num_tasks:$num, tasks_defs: &DEFS, tasks_vars: pvars }
     }};
 }
 
+
+impl MinosScheduler {
+	pub fn run(&self) -> ! {
+		self.init();
+		loop {
+			
+		}
+	}
+	fn init(&self) {
+		//let k:u32;
+		for i in 0..self.num_tasks {
+			let j = i as usize;
+			let sts = self.tasks_defs[j].stack_size;
+			let sts2 = self.tasks_vars[j].stack_addr - self.tasks_vars[j].stack_top;
+			if (sts != sts2) {
+				minos_yield();
+			}
+		}
+	}
+}
+
 pub fn testme () -> MinosScheduler {
-	let s = Minos_Tasks!(2, <t1, 3, 1024> ,  <t2, 4, 1024>);
-    s
+	let s = Minos_Tasks!(2, <t1, 3, 128> ,  <t2, 4, 128>);
+    s.run();
 }
 
 
